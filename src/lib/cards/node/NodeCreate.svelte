@@ -9,10 +9,10 @@
 	import { App } from '$lib/States.svelte';
 
 	type NodeCreateProps = {
-		show: boolean,
-	}
+		show: boolean;
+	};
 
-	let { show = $bindable(false) }: NodeCreateProps = $props()
+	let { show = $bindable(false) }: NodeCreateProps = $props();
 
 	let nodekey = $state('');
 	let username = $state('');
@@ -30,7 +30,7 @@
 			const n = await createNode(nodekey, username);
 
 			// append to the store
-			App.nodes.value.push(n)
+			App.nodes.value.push(n);
 
 			// success message
 			toastSuccess('Created node "' + n.name + '"', ToastStore);

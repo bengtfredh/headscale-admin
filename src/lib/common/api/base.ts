@@ -22,17 +22,16 @@ async function toApiResponse<T>(response: Response): Promise<T> {
 			throw new ApiAuthErrorUnauthorized();
 		}
 
-		try{
-			const data = JSON.parse(text)
+		try {
+			const data = JSON.parse(text);
 			if (isApiError(data)) {
 				throw new Error(data.message);
 			}
-		} catch(e) {
+		} catch (e) {
 			if (!(e instanceof SyntaxError)) {
-				throw e
+				throw e;
 			}
 		}
-
 
 		// unspecified errors
 		throw new Error('Unspecified Error: ' + text);
@@ -59,7 +58,7 @@ function headers(): { headers: HeadersInit } {
 }
 
 export function toUrl(path: string): string {
-	return new URL(path, App.apiUrl.value).href
+	return new URL(path, App.apiUrl.value).href;
 }
 
 async function apiFetch<T>(path: string, init?: RequestInit, verbose: boolean = false): Promise<T> {
@@ -70,7 +69,7 @@ async function apiFetch<T>(path: string, init?: RequestInit, verbose: boolean = 
 		}
 		const apiResponse = await toApiResponse<T>(response);
 		if (App.apiKeyInfo.value.authorized === null) {
-			App.apiKeyInfo.value.authorized = true
+			App.apiKeyInfo.value.authorized = true;
 		}
 		return apiResponse;
 	} catch (err) {

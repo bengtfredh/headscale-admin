@@ -1,11 +1,4 @@
-import type {
-	ApiNode,
-	ApiPolicy,
-	ApiUser,
-	Node,
-	PreAuthKey,
-	User,
-} from '$lib/common/types';
+import type { ApiNode, ApiPolicy, ApiUser, Node, PreAuthKey, User } from '$lib/common/types';
 import { debug } from '../debug';
 import { apiPost, apiPut } from './base';
 import type { ACLBuilder } from '../acl.svelte';
@@ -29,17 +22,10 @@ export async function renameNode(n: Node, nameNew: string): Promise<Node> {
 	return node;
 }
 
-export async function changeNodeOwner(n: Node, newUserID: string): Promise<Node> {
-	const path = `${API_URL_NODE}/${n.id}/user`;
-	const { node } = await apiPost<ApiNode>(path, {user: newUserID});
-	debug('Re-assigned Node from "' + n.user.name + '" to "' + node.user.name + '"');
-	return node;
-}
-
 export async function expirePreAuthKey(pak: PreAuthKey) {
 	const path = `${API_URL_PREAUTHKEY}/expire`;
-	const data = { user: pak.user.id, key: pak.key };
-	await apiPost(path, data);
+	await apiPost(path, { id: pak.id });
+	debug('Expired PreAuthKey ID "' + pak.id + '"');
 }
 
 export async function expireNode(n: Node): Promise<Node> {
@@ -96,15 +82,15 @@ export async function disableRoutes(node: Node, ...routes: string[]): Promise<st
 }
 
 export async function setPolicy(acl: ACLBuilder) {
-	const path = `${API_URL_POLICY}`
-	await apiPut<ApiPolicy>(path, {"policy": acl.JSON(4)})
+	const path = `${API_URL_POLICY}`;
+	await apiPut<ApiPolicy>(path, { policy: acl.JSON(4) });
 }
 
 export async function refreshApiKey() {
 	const apiKeyNew = await createApiKey();
-	const apiKeyOld = App.apiKey.value
+	const apiKeyOld = App.apiKey.value;
 	await expireApiKey(apiKeyOld);
-	App.apiKey.value = apiKeyNew
-	App.apiKeyInfo.value.informedExpiringSoon = false
-	App.apiKeyInfo.value.informedUnauthorized = false
+	App.apiKey.value = apiKeyNew;
+	App.apiKeyInfo.value.informedExpiringSoon = false;
+	App.apiKeyInfo.value.informedUnauthorized = false;
 }

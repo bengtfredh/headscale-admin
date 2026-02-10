@@ -47,13 +47,13 @@
 	import { App } from '$lib/States.svelte';
 	import { setTheme } from '$lib/common/themes';
 
-	let { children } = $props()
+	let { children } = $props();
 
 	let ToastStore = $state(getToastStore());
 
 	onMount(() => {
-		setTheme(App.theme.value || 'skeleton')
-		App.populateAll(createPopulateErrorHandler(ToastStore), true)
+		setTheme(App.theme.value || 'skeleton');
+		App.populateAll(createPopulateErrorHandler(ToastStore), true);
 
 		if (!App.hasValidApi) {
 			goto(`${base}/settings`);

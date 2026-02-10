@@ -21,8 +21,15 @@
 	const Inner = $derived(App.layoutRoute.value === 'list' ? RouteListCard : RouteTileCard);
 
 	const nodesSortedFiltered = $derived(
-		getSortedFilteredNodes(App.nodes.value, filterString, sortMethod, sortDirection, filterOnlineStatus, true)
-	)
+		getSortedFilteredNodes(
+			App.nodes.value,
+			filterString,
+			sortMethod,
+			sortDirection,
+			filterOnlineStatus,
+			true,
+		),
+	);
 
 	function toggle(method: string) {
 		if (method != sortMethod) {
@@ -35,7 +42,7 @@
 </script>
 
 <Page>
-	<PageHeader title="Routes" layout={App.layoutRoute} bind:filterString buttonText={""}>
+	<PageHeader title="Routes" layout={App.layoutRoute} bind:filterString buttonText={''}>
 		{#snippet button()}
 			x
 		{/snippet}

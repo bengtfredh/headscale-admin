@@ -8,19 +8,22 @@
 	import { slide } from 'svelte/transition';
 	import { createPreAuthKey } from '$lib/common/api';
 	import { debug } from '$lib/common/debug';
+	import { copyToClipboard } from '$lib/common/funcs';
+	import { getToastStore } from '@skeletonlabs/skeleton';
+	import RawMdiClipboard from '~icons/mdi/clipboard';
 	import CardSeparator from '../CardSeparator.svelte';
 	import { App } from '$lib/States.svelte';
 
 	type UserListPreAuthKeysProps = {
-		user: User,
-		title?: string,
-	}
-	let {
-		user = $bindable(),
-		title = 'PreAuth Keys:',
-	}: UserListPreAuthKeysProps = $props();
+		user: User;
+		title?: string;
+	};
+	let { user = $bindable(), title = 'PreAuth Keys:' }: UserListPreAuthKeysProps = $props();
+
+	const toastStore = getToastStore();
 
 	let hideInvalid = $state(true);
+	let createdKey = $state('');
 
 	let showCreate = $state(false);
 	let disableCreate = $state(false);
@@ -28,9 +31,8 @@
 	let expires = $state(defaultExpires());
 	const preAuthKeys = $derived(
 		App.preAuthKeys.value.filter((p) => {
-			return (p.user.id === user.id) 
-				&& (!hideInvalid || (hideInvalid && !isExpiredOrUsed(p)));
-		})
+			return p.user.id === user.id && (!hideInvalid || (hideInvalid && !isExpiredOrUsed(p)));
+		}),
 	);
 
 	function defaultExpires(hours: number = 1, minutes: number = 0) {
@@ -51,7 +53,7 @@
 
 	function isExpiredOrUsed(p: PreAuthKey): boolean {
 		return new Date() > new Date(p.expiration) || (p.used && !p.reusable);
-	};
+	}
 </script>
 
 <CardListEntry {title} top>
@@ -95,7 +97,8 @@
 										checked.reusable,
 										expires,
 									);
-									App.preAuthKeys.value.push(preAuthKey)
+									createdKey = preAuthKey.key;
+									App.preAuthKeys.value.push(preAuthKey);
 								} catch (e) {
 									debug(e);
 								} finally {
@@ -143,6 +146,31 @@
 							<p>Reusable</p>
 						</label>
 					</div>
+				</div>
+			</div>
+		{/if}
+		{#if createdKey}
+			<div
+				transition:slide|global
+				class="col-span-12 mt-2 p-3 rounded-md bg-success-200 dark:bg-success-800 border border-success-400 dark:border-success-600"
+			>
+				<p class="text-xs font-semibold mb-1">Copy this key now — it will not be shown again:</p>
+				<div class="flex items-center gap-2">
+					<code class="font-mono text-xs break-all flex-1">{createdKey}</code>
+					<button
+						class="btn btn-sm variant-filled-success rounded-md"
+						onclick={() => copyToClipboard(createdKey, toastStore)}
+					>
+						<RawMdiClipboard class="mr-1" /> Copy
+					</button>
+					<button
+						class="btn btn-sm variant-soft rounded-md"
+						onclick={() => {
+							createdKey = '';
+						}}
+					>
+						Dismiss
+					</button>
 				</div>
 			</div>
 		{/if}

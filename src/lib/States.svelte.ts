@@ -2,200 +2,204 @@ import { Mutex } from 'async-mutex';
 
 import { browser } from '$app/environment';
 import type { User, Node, PreAuthKey, ApiKeyInfo, ApiApiKeys, Deployment } from '$lib/common/types';
-import { getUsers, getPreAuthKeys, getNodes } from '$lib/common/api/get';
+import { getUsers, getPreAuthKeys, getNodes, getPolicy } from '$lib/common/api/get';
 import type { ToastStore } from '@skeletonlabs/skeleton';
 import { apiGet } from './common/api';
-import { arraysEqual, clone, toastError, toastWarning } from './common/funcs';
+import { arraysEqual, clone, getApiKeyPrefix, toastError, toastWarning } from './common/funcs';
 import { debug } from './common/debug';
+import { ACLBuilder, type ACL, type AclTagOwners } from './common/acl.svelte';
+import JWCC from 'json5';
 
 export type LayoutStyle = 'tile' | 'list';
 
 function toggledLayout(style: LayoutStyle): LayoutStyle {
-    return style === 'list' ? 'tile' : 'list';
+	return style === 'list' ? 'tile' : 'list';
 }
 
 export type Valued<T> = {
-    value: T
-}
+	value: T;
+};
 
 export class State<T> {
-    #value = $state<T>() as T;
-    #effect?: (value?: T) => void
+	#value = $state<T>() as T;
+	#effect?: (value?: T) => void;
 
-    get value(): T {
-        return this.#value
-    }
+	get value(): T {
+		return this.#value;
+	}
 
-    set value(value: T) {
-        this.#value = value
-        if (this.#effect !== undefined) {
-            this.#effect(value)
-        }
-    }
+	set value(value: T) {
+		this.#value = value;
+		if (this.#effect !== undefined) {
+			this.#effect(value);
+		}
+	}
 
-    constructor(value: T, effect?: (value?: T) => void) {
-        this.#value = value
-        this.#effect = effect
-    }
+	constructor(value: T, effect?: (value?: T) => void) {
+		this.#value = value;
+		this.#effect = effect;
+	}
 }
-
 
 // state that is wrapped in LocalStorage
 export class StateLocal<T> {
-    #key: string;
-    #value = $state<T>() as T;
-    #effect?: (value?: T) => void;
-    // #saver = $derived(this.save(this.#value))
+	#key: string;
+	#value = $state<T>() as T;
+	#effect?: (value?: T) => void;
+	// #saver = $derived(this.save(this.#value))
 
-    get key() {
-        return this.#key;
-    }
+	get key() {
+		return this.#key;
+	}
 
-    get value(): T {
-        return this.#value;
-    }
+	get value(): T {
+		return this.#value;
+	}
 
-    set value(value: T) {
-        this.#value = value;
-        // this.save(this.#value);
-        if(this.#effect !== undefined) {
-            this.#effect(value);
-        }
-    }
+	set value(value: T) {
+		this.#value = value;
+		// this.save(this.#value);
+		if (this.#effect !== undefined) {
+			this.#effect(value);
+		}
+	}
 
-    save(value: T) {
-        debug(`Saving '${this.#key}' in localStorage...`);
-        localStorage.setItem(this.#key, this.serialize(value));
-    }
+	save(value: T) {
+		debug(`Saving '${this.#key}' in localStorage...`);
+		localStorage.setItem(this.#key, this.serialize(value));
+	}
 
+	constructor(key: string, valueDefault: T, effect?: (value?: T) => void) {
+		this.#key = key;
+		this.#effect = effect;
 
-    constructor(key: string, valueDefault: T, effect?: (value?: T) => void) {
-        this.#key = key;
-        this.#effect = effect;
+		if (browser) {
+			const storedValue = localStorage.getItem(this.#key);
+			if (storedValue) {
+				this.#value = this.deserialize(storedValue);
+			} else {
+				this.#value = valueDefault;
+			}
 
-        if(browser){
-            const storedValue = localStorage.getItem(this.#key);
-            if (storedValue) {
-                this.#value = this.deserialize(storedValue);
-            } else {
-                this.#value = valueDefault;
-            }
-        
-            // how do I clean this up?
-            $effect.root(()=>{
-                $effect(()=>{
-                    this.save(this.#value);
-                })
-            })
-        }
-    }
+			// how do I clean this up?
+			$effect.root(() => {
+				$effect(() => {
+					this.save(this.#value);
+				});
+			});
+		}
+	}
 
-    serialize(value: T): string {
-        return JSON.stringify(value);
-    }
+	serialize(value: T): string {
+		return JSON.stringify(value);
+	}
 
-    deserialize(item: string): T {
-        return JSON.parse(item);
-    }
+	deserialize(item: string): T {
+		return JSON.parse(item);
+	}
 }
 
 // application data states
 export class HeadscaleAdmin {
-    users = new State<User[]>([]);
-    nodes = new State<Node[]>([]);
-    // routes = new State<Route[]>([]);
-    preAuthKeys = new State<PreAuthKey[]>([]);
+	users = new State<User[]>([]);
+	nodes = new State<Node[]>([]);
+	// routes = new State<Route[]>([]);
+	preAuthKeys = new State<PreAuthKey[]>([]);
 
-    // debugging status
-    debug = new StateLocal<boolean>('debug', false);
+	// ACL-defined tags (from policy tagOwners)
+	aclTags = new State<string[]>([]);
+	aclTagOwners = new State<AclTagOwners>({});
 
-    // theme information
-    theme = new StateLocal<string>('theme', 'skeleton', (themeName) => {
-        if(themeName !== undefined) {
-            document.body.setAttribute('data-theme', themeName);
-        }
-    })
+	// debugging status
+	debug = new StateLocal<boolean>('debug', false);
 
-    // api info
-    apiValid = $state<boolean>(false);
-    apiUrl = new StateLocal<string>('apiUrl', '');
-    apiKey = new StateLocal<string>('apiKey', '');
-    apiTtl = new StateLocal<number>('apiTTL', 10000);
-    apiKeyInfo = new StateLocal<ApiKeyInfo>('apiKeyInfo', {
-        authorized: null,
-        expires: '',
-        informedUnauthorized: false,
-        informedExpiringSoon: false,
-    })
-    hasApiKey = $derived<boolean>(isInitialized() && !!this.apiKey.value)
-    hasApiUrl = $derived<boolean>(isInitialized() && !!this.apiUrl.value)
-    hasApi = $derived(this.hasApiKey && this.hasApiUrl)
-    hasValidApi = $derived(this.hasApi && this.apiKeyInfo.value.authorized === true)
+	// theme information
+	theme = new StateLocal<string>('theme', 'skeleton', (themeName) => {
+		if (themeName !== undefined) {
+			document.body.setAttribute('data-theme', themeName);
+		}
+	});
 
-    // layouts
-    layoutUser = new StateLocal<LayoutStyle>('layoutUser', 'list');
-    layoutNode = new StateLocal<LayoutStyle>('layoutNode', 'list');
-    layoutRoute = new StateLocal<LayoutStyle>('layoutRoute', 'list');
+	// api info
+	apiValid = $state<boolean>(false);
+	apiUrl = new StateLocal<string>('apiUrl', '');
+	apiKey = new StateLocal<string>('apiKey', '');
+	apiTtl = new StateLocal<number>('apiTTL', 10000);
+	apiKeyInfo = new StateLocal<ApiKeyInfo>('apiKeyInfo', {
+		authorized: null,
+		expires: '',
+		informedUnauthorized: false,
+		informedExpiringSoon: false,
+	});
+	hasApiKey = $derived<boolean>(isInitialized() && !!this.apiKey.value);
+	hasApiUrl = $derived<boolean>(isInitialized() && !!this.apiUrl.value);
+	hasApi = $derived(this.hasApiKey && this.hasApiUrl);
+	hasValidApi = $derived(this.hasApi && this.apiKeyInfo.value.authorized === true);
 
-    toggleLayoutUser() {
-        this.layoutUser.value = toggledLayout(this.layoutUser.value)
-    }
+	// layouts
+	layoutUser = new StateLocal<LayoutStyle>('layoutUser', 'list');
+	layoutNode = new StateLocal<LayoutStyle>('layoutNode', 'list');
+	layoutRoute = new StateLocal<LayoutStyle>('layoutRoute', 'list');
 
-    toggleLayoutNode() {
-        this.layoutNode.value = toggledLayout(this.layoutNode.value)
-    }
+	toggleLayoutUser() {
+		this.layoutUser.value = toggledLayout(this.layoutUser.value);
+	}
 
-    // deployments
-    deploymentDefaults = new StateLocal<Deployment>('deploymentDefaults', {
-        // general
-        shieldsUp: false,
-        generateQR: false,
-        reset: false,
-        operator: false,
-        operatorValue: '$USER',
-        forceReauth: false,
-        sshServer: false,
-        usePreAuthKey: false,
-        preAuthKeyUser: '',
-        preAuthKey: '',
-        unattended: false,
-        // advertise
-        advertiseExitNode: false,
-        advertiseExitNodeLocalAccess: false,
-        advertiseRoutes: false,
-        advertiseRoutesValues: [],
-        advertiseTags: false,
-        advertiseTagsValues: [],
-        // accept
-        acceptDns: false,
-        acceptRoutes: false,
-        acceptExitNode: false,
-        acceptExitNodeValue: '',
-    })
+	toggleLayoutNode() {
+		this.layoutNode.value = toggledLayout(this.layoutNode.value);
+	}
 
-    async populateUsers(users?: User[]): Promise<boolean> {
-        if (users === undefined) {
-            users = await getUsers()
-        }
-        if(!arraysEqual(this.users.value, users)){
-            this.users.value = users
-            return true
-        }
-        return false
-    }
+	// deployments
+	deploymentDefaults = new StateLocal<Deployment>('deploymentDefaults', {
+		// general
+		shieldsUp: false,
+		generateQR: false,
+		reset: false,
+		operator: false,
+		operatorValue: '$USER',
+		forceReauth: false,
+		sshServer: false,
+		usePreAuthKey: false,
+		preAuthKeyUser: '',
+		preAuthKey: '',
+		unattended: false,
+		// advertise
+		advertiseExitNode: false,
+		advertiseExitNodeLocalAccess: false,
+		advertiseRoutes: false,
+		advertiseRoutesValues: [],
+		advertiseTags: false,
+		advertiseTagsValues: [],
+		// accept
+		acceptDns: false,
+		acceptRoutes: false,
+		acceptExitNode: false,
+		acceptExitNodeValue: '',
+	});
 
-    async populateNodes(nodes?: Node[]): Promise<boolean> {
-        if (nodes === undefined) {
-            nodes = await getNodes()
-        }
-        if(!arraysEqual(this.nodes.value, nodes)){
-            this.nodes.value = nodes
-            return true
-        }
-        return false
-    }
+	async populateUsers(users?: User[]): Promise<boolean> {
+		if (users === undefined) {
+			users = await getUsers();
+		}
+		if (!arraysEqual(this.users.value, users)) {
+			this.users.value = users;
+			return true;
+		}
+		return false;
+	}
 
-    /*
+	async populateNodes(nodes?: Node[]): Promise<boolean> {
+		if (nodes === undefined) {
+			nodes = await getNodes();
+		}
+		if (!arraysEqual(this.nodes.value, nodes)) {
+			this.nodes.value = nodes;
+			return true;
+		}
+		return false;
+	}
+
+	/*
     async populateRoutes(routes?: Route[]): Promise<boolean> {
         if (routes === undefined) {
             routes = await getRoutes()
@@ -208,71 +212,92 @@ export class HeadscaleAdmin {
     }
     */
 
-    async populatePreAuthKeys(preAuthKeys?: PreAuthKey[]): Promise<boolean> {
-        if (preAuthKeys === undefined) {
-            preAuthKeys = await getPreAuthKeys()
-        }
-        if(!arraysEqual(this.preAuthKeys.value, preAuthKeys)){
-            this.preAuthKeys.value = [...preAuthKeys]
-            return true
-        }
-        return false
-    }
+	async populatePreAuthKeys(preAuthKeys?: PreAuthKey[]): Promise<boolean> {
+		if (preAuthKeys === undefined) {
+			preAuthKeys = await getPreAuthKeys();
+		}
+		if (!arraysEqual(this.preAuthKeys.value, preAuthKeys)) {
+			this.preAuthKeys.value = [...preAuthKeys];
+			return true;
+		}
+		return false;
+	}
 
-    async populateApiKeyInfo(): Promise<boolean> {
-        const { apiKeys } = await apiGet<ApiApiKeys>(`/api/v1/apikey`);
-        const myKey = apiKeys.filter((key) => this.apiKey.value.startsWith(key.prefix))[0];
-        const apiKeyInfo = this.apiKeyInfo.value
-        apiKeyInfo.expires = myKey.expiration;
-        apiKeyInfo.authorized = true;
-        this.apiKeyInfo.value = {...apiKeyInfo};
-        return true;
-    }
+	async populateAclTags(): Promise<boolean> {
+		try {
+			const policy = await getPolicy();
+			const acl = ACLBuilder.fromPolicy(JWCC.parse<ACL>(policy));
+			const tags = acl.getTagNames();
+			this.aclTagOwners.value = acl.tagOwners;
+			if (!arraysEqual(this.aclTags.value, tags)) {
+				this.aclTags.value = tags;
+				return true;
+			}
+		} catch (e) {
+			debug('Failed to load ACL tags:', e);
+		}
+		return false;
+	}
 
-    async populateAll(handler?: (err: unknown) => void, repeat: boolean = true){
-        if (this.hasValidApi) {
-            const promises = []
-            promises.push(this.populateUsers());
-            promises.push(this.populateNodes());
-            promises.push(this.populatePreAuthKeys());
-            // promises.push(this.populateRoutes());
-            promises.push(this.populateApiKeyInfo());
-            await Promise.allSettled(promises);
-            promises.forEach((p) => p.catch(handler));
-            debug('Completed all store population requests.');
-        }
+	async populateApiKeyInfo(): Promise<boolean> {
+		const { apiKeys } = await apiGet<ApiApiKeys>(`/api/v1/apikey`);
+		const myPrefix = getApiKeyPrefix(this.apiKey.value);
+		const myKey = apiKeys.find((key) => key.prefix === myPrefix);
+		if (!myKey) {
+			debug('Could not find matching API key with prefix ' + myPrefix);
+			return false;
+		}
+		const apiKeyInfo = this.apiKeyInfo.value;
+		apiKeyInfo.expires = myKey.expiration;
+		apiKeyInfo.authorized = true;
+		this.apiKeyInfo.value = { ...apiKeyInfo };
+		return true;
+	}
 
-        if (repeat === true) {
-            setTimeout(() => {
-                this.populateAll(handler, true)
-            }, this.apiTtl.value)
-        }
-    }
+	async populateAll(handler?: (err: unknown) => void, repeat: boolean = true) {
+		if (this.hasValidApi) {
+			const promises = [];
+			promises.push(this.populateUsers());
+			promises.push(this.populateNodes());
+			promises.push(this.populatePreAuthKeys());
+			// promises.push(this.populateRoutes());
+			promises.push(this.populateAclTags());
+			promises.push(this.populateApiKeyInfo());
+			await Promise.allSettled(promises);
+			promises.forEach((p) => p.catch(handler));
+			debug('Completed all store population requests.');
+		}
 
-    toggleLayout(layout?: Valued<LayoutStyle>) {
-        if (layout) {
-            layout.value = (layout.value === 'tile' ? 'list' : 'tile');
-        }
-    }
+		if (repeat === true) {
+			setTimeout(() => {
+				this.populateAll(handler, true);
+			}, this.apiTtl.value);
+		}
+	}
 
-    saveDeploymentDefaults(deployment: Deployment) {
-        const d = clone(deployment)
-        d.preAuthKeyUser = ''
-        d.preAuthKey = ''
-        this.deploymentDefaults.value = d
-    }
+	toggleLayout(layout?: Valued<LayoutStyle>) {
+		if (layout) {
+			layout.value = layout.value === 'tile' ? 'list' : 'tile';
+		}
+	}
 
-    updateValue(valued: Valued<Identified[]>, item: Identified) {
-        valued.value = valued.value.map((itemOld) => (itemOld.id === item.id ? item : itemOld));
-    }
+	saveDeploymentDefaults(deployment: Deployment) {
+		const d = clone(deployment);
+		d.preAuthKeyUser = '';
+		d.preAuthKey = '';
+		this.deploymentDefaults.value = d;
+	}
+
+	updateValue(valued: Valued<Identified[]>, item: Identified) {
+		valued.value = valued.value.map((itemOld) => (itemOld.id === item.id ? item : itemOld));
+	}
 }
 
-export const App = $state<HeadscaleAdmin>(new HeadscaleAdmin())
-
+export const App = $state<HeadscaleAdmin>(new HeadscaleAdmin());
 
 function isInitialized(): boolean {
-    return true
-    // return typeof window !== 'undefined';
+	return true;
+	// return typeof window !== 'undefined';
 }
 
 interface Identified {
@@ -280,7 +305,7 @@ interface Identified {
 }
 
 export function updateItem(items: Identified[], item: Identified): Identified[] {
-    return items.map((itemOld) => (itemOld.id === item.id ? item : itemOld))
+	return items.map((itemOld) => (itemOld.id === item.id ? item : itemOld));
 }
 
 const mu = new Mutex();
@@ -302,8 +327,7 @@ export function informUserExpiringSoon(toastStore: ToastStore) {
 		if (App.apiKeyInfo.value.informedExpiringSoon === true) {
 			return;
 		}
-		App.apiKeyInfo.value.informedUnauthorized = true;
-		App.apiKeyInfo.value.authorized = false;
+		App.apiKeyInfo.value.informedExpiringSoon = true;
 		toastWarning('API Key Expires Soon', toastStore);
 	});
 }

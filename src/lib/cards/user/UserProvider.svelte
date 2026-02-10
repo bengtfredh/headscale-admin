@@ -3,11 +3,10 @@
 	import CardListEntry from '../CardListEntry.svelte';
 
 	type ItemCreatedAtProps = {
-		user: User,
-	}
+		user: User;
+	};
 
-	let { user = $bindable() }: ItemCreatedAtProps = $props()
-
+	let { user = $bindable() }: ItemCreatedAtProps = $props();
 </script>
 
 <CardListEntry title="Provider:">

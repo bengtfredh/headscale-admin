@@ -5,9 +5,9 @@
 	import CardListEntry from '../CardListEntry.svelte';
 
 	type NodeLastSeenProps = {
-		node: Node,
-	}
-	let { node }: NodeLastSeenProps = $props()
+		node: Node;
+	};
+	let { node }: NodeLastSeenProps = $props();
 
 	let lastSeen = $state(getTimeDifferenceMessage(getTime(node.lastSeen)));
 

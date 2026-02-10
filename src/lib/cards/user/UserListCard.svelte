@@ -8,10 +8,10 @@
 	import OnlineUserIndicator from '$lib/parts/OnlineUserIndicator.svelte';
 
 	type UserListCardProps = {
-		user: User,
-		open?: boolean,
-	}
-	let { user = $bindable(), open = $bindable(false) }: UserListCardProps = $props()
+		user: User;
+		open?: boolean;
+	};
+	let { user = $bindable(), open = $bindable(false) }: UserListCardProps = $props();
 </script>
 
 <AccordionItem

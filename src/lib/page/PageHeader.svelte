@@ -9,13 +9,13 @@
 	import type { Snippet } from 'svelte';
 
 	type PageHeaderProps = {
-		filterString?: string,
-		title: string,
-		show?: boolean,
-		layout?: Valued<LayoutStyle>,
-		buttonText?: string,
-		button?: Snippet,
-	}
+		filterString?: string;
+		title: string;
+		show?: boolean;
+		layout?: Valued<LayoutStyle>;
+		buttonText?: string;
+		button?: Snippet;
+	};
 
 	let {
 		filterString = $bindable(undefined),
@@ -24,12 +24,12 @@
 		layout = $bindable(undefined),
 		buttonText = 'Create',
 		button,
-	}: PageHeaderProps = $props()
+	}: PageHeaderProps = $props();
 
-	const layoutCurrent = $derived(layout !== undefined ? layout.value : null)
+	const layoutCurrent = $derived(layout !== undefined ? layout.value : null);
 	const regexIsValid = $derived.by(() => {
 		if (filterString === undefined) {
-			return true
+			return true;
 		}
 
 		try {
@@ -62,7 +62,7 @@
 	</div>
 	{#if button !== undefined}
 		<div class="flex justify-start pt-4 space-x-5">
-			{#if buttonText !== ""}
+			{#if buttonText !== ''}
 				<button
 					type="button"
 					class="btn btn-sm variant-filled-success rounded-sm"

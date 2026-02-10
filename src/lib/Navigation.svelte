@@ -16,12 +16,10 @@
 	import { App } from '$lib/States.svelte';
 
 	type NavigationProps = {
-		labels?: boolean
-	}
+		labels?: boolean;
+	};
 
-	let {
-		labels = true,
-	}: NavigationProps = $props()
+	let { labels = true }: NavigationProps = $props();
 
 	const DrawerStore = getDrawerStore();
 
@@ -51,7 +49,7 @@
 		{ path: '/settings', name: 'Settings', logo: RawMdiSettings },
 	].filter((p) => p != undefined);
 
-	const pages = $derived.by(() => App.hasValidApi ? allPages : allPages.slice(-1));
+	const pages = $derived.by(() => (App.hasValidApi ? allPages : allPages.slice(-1)));
 </script>
 
 <nav class="list-nav pt-0">

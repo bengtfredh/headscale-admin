@@ -3,11 +3,10 @@
 	import type { Named } from '$lib/common/types';
 
 	type ItemCreatedAtProps = {
-		item: Named,
-	}
+		item: Named;
+	};
 
-	let { item = $bindable() }: ItemCreatedAtProps = $props()
-
+	let { item = $bindable() }: ItemCreatedAtProps = $props();
 </script>
 
 <CardListEntry title="Created:">

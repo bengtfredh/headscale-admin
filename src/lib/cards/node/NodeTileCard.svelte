@@ -2,12 +2,7 @@
 	import { xxHash32 } from 'js-xxhash';
 	import type { Node } from '$lib/common/types';
 	import { onMount } from 'svelte';
-	import {
-		dateToStr,
-		getTime,
-		getTimeDifferenceMessage,
-		openDrawer,
-	} from '$lib/common/funcs';
+	import { dateToStr, getTime, getTimeDifferenceMessage, openDrawer } from '$lib/common/funcs';
 	import { getDrawerStore } from '@skeletonlabs/skeleton';
 	import CardTileContainer from '../CardTileContainer.svelte';
 	import CardTileEntry from '../CardTileEntry.svelte';
@@ -16,10 +11,10 @@
 	import { App } from '$lib/States.svelte';
 
 	type NodeTileCardProps = {
-		node: Node,
-	}
+		node: Node;
+	};
 
-	let { node = $bindable() }: NodeTileCardProps = $props()
+	let { node = $bindable() }: NodeTileCardProps = $props();
 
 	let lastSeen = $state(getTimeDifferenceMessage(getTime(node.lastSeen)));
 	const routeCount = $derived(node.availableRoutes.length);
@@ -27,8 +22,8 @@
 
 	let color = $derived(
 		(xxHash32(node.id + ':' + node.givenName, 0xbeefbabe) & 0xff_ff_ff)
-		.toString(16)
-		.padStart(6, '0')
+			.toString(16)
+			.padStart(6, '0'),
 	);
 
 	onMount(() => {
@@ -64,8 +59,16 @@
 	</CardTileEntry>
 	<CardTileEntry title="User:">
 		<div class="flex flex-row gap-3 items-center">
-			{node.user.name}
-			<OnlineUserIndicator bind:user={node.user} />
+			{#if node.user}
+				{node.user.name}
+				<OnlineUserIndicator bind:user={node.user} />
+			{:else if node.tags.length > 0}
+				<span class="badge variant-soft-secondary">
+					Tagged: {node.tags.map((t) => t.replace('tag:', '')).join(', ')}
+				</span>
+			{:else}
+				<span class="text-surface-500">No Owner</span>
+			{/if}
 		</div>
 	</CardTileEntry>
 	<CardTileEntry title="IPv4 Address:">

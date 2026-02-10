@@ -2,53 +2,62 @@
 	import type { PreAuthKey } from '$lib/common/types';
 	import RawMdiClipboard from '~icons/mdi/clipboard';
 	import { getToastStore, popup, type PopupSettings } from '@skeletonlabs/skeleton';
-	import { copyToClipboard } from '$lib/common/funcs';
+	import { copyToClipboard, isMaskedKey, getKeyDisplayLabel } from '$lib/common/funcs';
 	import Delete from '$lib/parts/Delete.svelte';
 	import { expirePreAuthKey, getPreAuthKeys } from '$lib/common/api';
 	import { App } from '$lib/States.svelte';
 	import { onMount } from 'svelte';
 
 	type UserListPreAuthKeyProps = {
-		preAuthKey: PreAuthKey,
-	}
-	let { preAuthKey }: UserListPreAuthKeyProps = $props()
+		preAuthKey: PreAuthKey;
+	};
+	let { preAuthKey }: UserListPreAuthKeyProps = $props();
 
 	const toastStore = getToastStore();
-	let pakIsExpired = $state(isExpired(preAuthKey))
+	let pakIsExpired = $state(isExpired(preAuthKey));
 
 	function isExpired(preAuthKey: PreAuthKey): boolean {
 		return new Date() > new Date(preAuthKey.expiration);
 	}
 
-	onMount(()=>{
+	onMount(() => {
 		const interval = setInterval(() => {
-			pakIsExpired = isExpired(preAuthKey)
-		}, 1000)
+			pakIsExpired = isExpired(preAuthKey);
+		}, 1000);
 
 		return () => {
-			clearInterval(interval)
-		}
-	})
+			clearInterval(interval);
+		};
+	});
 </script>
 
 <div class="flex flex-row items-start">
 	<div class="flex flex-col px-2 gap-2">
-		<button
-			class="font-mono flex items-center border-2 border-dashed w-auto py-1.5 px-2 mr-3 border-slate-300 dark:border-slate-700"
-			onclick={() => copyToClipboard(preAuthKey.key, toastStore)}
-		>
-			<span class="mr-2">
-				<RawMdiClipboard />
+		{#if isMaskedKey(preAuthKey.key)}
+			<span
+				class="font-mono flex items-center border-2 border-dashed w-auto py-1.5 px-2 mr-3 border-slate-300 dark:border-slate-700 opacity-60"
+				title="Full key is only available at creation time"
+			>
+				{getKeyDisplayLabel(preAuthKey.key)}
 			</span>
-			{preAuthKey.key.substring(0, 8)}
-		</button>
+		{:else}
+			<button
+				class="font-mono flex items-center border-2 border-dashed w-auto py-1.5 px-2 mr-3 border-slate-300 dark:border-slate-700"
+				onclick={() => copyToClipboard(preAuthKey.key, toastStore)}
+			>
+				<span class="mr-2">
+					<RawMdiClipboard />
+				</span>
+				{getKeyDisplayLabel(preAuthKey.key)}
+			</button>
+		{/if}
 		<span class="mr-2 {isExpired(preAuthKey) && 'hidden'}">
 			<Delete
 				func={async () => {
 					await expirePreAuthKey(preAuthKey);
 					const keys = await getPreAuthKeys([preAuthKey.user.id]);
 					keys.forEach((pak) => {
-						App.updateValue(App.preAuthKeys, pak)
+						App.updateValue(App.preAuthKeys, pak);
 					});
 				}}
 			/>
@@ -64,9 +73,7 @@
 				Used
 			</span>
 			<span
-				class="badge badge-glass {pakIsExpired
-					? 'variant-ghost-error'
-					: 'variant-flat opacity-50'}"
+				class="badge badge-glass {pakIsExpired ? 'variant-ghost-error' : 'variant-flat opacity-50'}"
 			>
 				Expired
 			</span>

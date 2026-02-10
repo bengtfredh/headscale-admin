@@ -48,7 +48,7 @@
 	let loading = $state(false);
 
 	const apiKeyExpirationMessage: ExpirationMessage = $derived.by(() => {
-		if (apiKeyInfo.expires !== ''){
+		if (apiKeyInfo.expires !== '') {
 			const td = getTimeDifference(getTime(apiKeyInfo.expires));
 			return {
 				message: td.message,
@@ -60,18 +60,18 @@
 	});
 
 	async function saveSettings(event?: Event) {
-		event?.preventDefault()
+		event?.preventDefault();
 
 		loading = true;
 		try {
-			if(settings.apiUrl === '') {
-				settings.apiUrl = page.url.origin
+			if (settings.apiUrl === '') {
+				settings.apiUrl = page.url.origin;
 			}
-			App.apiUrl.value = settings.apiUrl
-			App.apiKey.value = settings.apiKey
-			App.apiTtl.value = settings.apiTtl * 1000
-			App.debug.value = settings.debug
-			App.theme.value = settings.theme
+			App.apiUrl.value = settings.apiUrl;
+			App.apiKey.value = settings.apiKey;
+			App.apiTtl.value = settings.apiTtl * 1000;
+			App.debug.value = settings.debug;
+			App.theme.value = settings.theme;
 			App.apiKeyInfo.value = {
 				expires: '',
 				authorized: null,
@@ -92,10 +92,15 @@
 
 <Page classes="items-start">
 	<PageHeader title="Settings" />
-	<form onsubmit={saveSettings} class="max-w-3xl mx-auto p-6 bg-white dark:bg-gray-800 shadow rounded-lg">
+	<form
+		onsubmit={saveSettings}
+		class="max-w-3xl mx-auto p-6 bg-white dark:bg-gray-800 shadow rounded-lg"
+	>
 		<div class="space-y-6">
 			<div>
-				<label for="api-url" class="block text-lg font-medium text-gray-700 dark:text-gray-200">API URL</label>
+				<label for="api-url" class="block text-lg font-medium text-gray-700 dark:text-gray-200"
+					>API URL</label
+				>
 				<input
 					id="api-url"
 					class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
@@ -107,12 +112,14 @@
 			</div>
 
 			<div>
-				<label for="api-key" class="block text-lg font-medium text-gray-700 dark:text-gray-200">API Key</label>
+				<label for="api-key" class="block text-lg font-medium text-gray-700 dark:text-gray-200"
+					>API Key</label
+				>
 				<div class="mt-1 flex items-center">
 					<input
 						id="api-key"
 						class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-						type={apiKeyShow ? "text" : "password"}
+						type={apiKeyShow ? 'text' : 'password'}
 						placeholder="Enter your API Key"
 						disabled={loading}
 						bind:value={settings.apiKey}
@@ -121,8 +128,10 @@
 						type="button"
 						disabled={loading}
 						class="ml-2 p-2 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none"
-						onclick={() => { apiKeyShow = !apiKeyShow; }}
-						aria-label={apiKeyShow ? "Hide API Key" : "Show API Key"}
+						onclick={() => {
+							apiKeyShow = !apiKeyShow;
+						}}
+						aria-label={apiKeyShow ? 'Hide API Key' : 'Show API Key'}
 					>
 						{#if apiKeyShow}
 							<RawMdiEyeOff class="w-5 h-5" />
@@ -151,22 +160,30 @@
 				</div>
 				{#if apiKeyInfo.authorized !== null}
 					<div class="mt-2 text-sm">
-						<span class={apiKeyInfo.authorized ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
-							{apiKeyInfo.authorized ? "Authorized" : "Not Authorized"}
+						<span
+							class={apiKeyInfo.authorized
+								? 'text-green-600 dark:text-green-400'
+								: 'text-red-600 dark:text-red-400'}
+						>
+							{apiKeyInfo.authorized ? 'Authorized' : 'Not Authorized'}
 						</span>
-						{#if apiKeyInfo.authorized && apiKeyExpirationMessage}
+						{#if apiKeyInfo.authorized && apiKeyExpirationMessage.message}
 							<span class="ml-2 text-gray-500 dark:text-gray-400">
 								Expires in: {apiKeyExpirationMessage.message}
 							</span>
 						{/if}
 					</div>
 				{:else if loading}
-					<div class="mt-2 text-sm text-yellow-500 dark:text-yellow-400">Checking authorization...</div>
+					<div class="mt-2 text-sm text-yellow-500 dark:text-yellow-400">
+						Checking authorization...
+					</div>
 				{/if}
 			</div>
 
 			<div>
-				<label for="api-ttl" class="block text-lg font-medium text-gray-700 dark:text-gray-200">API Refresh Interval (seconds)</label>
+				<label for="api-ttl" class="block text-lg font-medium text-gray-700 dark:text-gray-200"
+					>API Refresh Interval (seconds)</label
+				>
 				<input
 					id="api-ttl"
 					class="mt-1 block w-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
@@ -191,29 +208,48 @@
 			</div>
 
 			<div class="flex items-start justify-between space-x-4">
-				<button type="button" class="btn btn-sm rounded-md variant-ghost-primary w-full" onclick={() => console.log(JSON.stringify(App.users.value, null, 4))}>
+				<button
+					type="button"
+					class="btn btn-sm rounded-md variant-ghost-primary w-full"
+					onclick={() => console.log(JSON.stringify(App.users.value, null, 4))}
+				>
 					Log Users
 				</button>
-				<button type="button" class="btn btn-sm rounded-md variant-ghost-primary w-full" onclick={() => console.log(JSON.stringify(App.nodes.value, null, 4))}>
+				<button
+					type="button"
+					class="btn btn-sm rounded-md variant-ghost-primary w-full"
+					onclick={() => console.log(JSON.stringify(App.nodes.value, null, 4))}
+				>
 					Log Nodes
 				</button>
-				<button type="button" class="btn btn-sm rounded-md variant-ghost-primary w-full" onclick={() => console.log(JSON.stringify(App.preAuthKeys.value, null, 4))}>
+				<button
+					type="button"
+					class="btn btn-sm rounded-md variant-ghost-primary w-full"
+					onclick={() => console.log(JSON.stringify(App.preAuthKeys.value, null, 4))}
+				>
 					Log PreAuthKeys
 				</button>
-				<button type="button" class="btn btn-sm rounded-md variant-ghost-primary w-full" onclick={() => console.log(JSON.stringify(App.apiKeyInfo.value, null, 4))}>
+				<button
+					type="button"
+					class="btn btn-sm rounded-md variant-ghost-primary w-full"
+					onclick={() => console.log(JSON.stringify(App.apiKeyInfo.value, null, 4))}
+				>
 					Log ApiKey Info
 				</button>
 			</div>
 
 			<div>
-				<label for="theme-selector" class="block text-lg font-medium text-gray-700 dark:text-gray-200">Theme</label>
+				<label
+					for="theme-selector"
+					class="block text-lg font-medium text-gray-700 dark:text-gray-200">Theme</label
+				>
 				<select
 					id="theme-selector"
 					class="mt-1 block w-full rounded-md border-gray-300 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
 					bind:value={App.theme.value}
 					onchange={() => {
-						setTheme(App.theme.value)
-						settings.theme = App.theme.value
+						setTheme(App.theme.value);
+						settings.theme = App.theme.value;
 					}}
 				>
 					{#each ALL_THEMES as theme}

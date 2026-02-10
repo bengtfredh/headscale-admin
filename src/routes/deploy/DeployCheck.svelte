@@ -6,13 +6,13 @@
 	import { type Snippet } from 'svelte';
 
 	type DeployCheckTypes = {
-		name: string,
-		help?: string,
-		checked: boolean,
-		children?: Snippet,
-	}
+		name: string;
+		help?: string;
+		checked: boolean;
+		children?: Snippet;
+	};
 
-	let { name, help, checked = $bindable(), children = undefined }: DeployCheckTypes = $props()
+	let { name, help, checked = $bindable(), children = undefined }: DeployCheckTypes = $props();
 
 	const popupId = xxHash32(name).toString();
 	let popupShow = $state(false);
@@ -57,8 +57,8 @@
 				<RawMdiInfo />
 			</button>
 		{/if}
-		<input id={"checkbox-" + name} class="checkbox" type="checkbox" bind:checked />
-		<label for={"checkbox-" + name}>{name}</label>
+		<input id={'checkbox-' + name} class="checkbox" type="checkbox" bind:checked />
+		<label for={'checkbox-' + name}>{name}</label>
 	</div>
 	{#if children != undefined && checked}
 		<div transition:slide class="pt-4">

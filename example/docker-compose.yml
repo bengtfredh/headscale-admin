@@ -14,7 +14,7 @@ services:
       - proxy
 
   headscale:
-    image: headscale/headscale:0.25
+    image: headscale/headscale:v0.28
     container_name: headscale
     restart: unless-stopped
     environment:
@@ -29,7 +29,7 @@ services:
       - proxy
 
   headscale-admin:
-    image: goodieshq/headscale-admin:0.25
+    image: goodieshq/headscale-admin:0.28
     container_name: headscale-admin
     restart: unless-stopped
     networks:

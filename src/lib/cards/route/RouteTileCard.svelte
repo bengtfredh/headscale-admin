@@ -1,20 +1,17 @@
 <script lang="ts">
 	import type { Node } from '$lib/common/types';
 	import { onMount } from 'svelte';
-	import {
-		getTime,
-		getTimeDifferenceMessage,
-	} from '$lib/common/funcs';
+	import { getTime, getTimeDifferenceMessage } from '$lib/common/funcs';
 	import CardTileContainer from '../CardTileContainer.svelte';
 	import CardTileEntry from '../CardTileEntry.svelte';
 	import OnlineNodeIndicator from '$lib/parts/OnlineNodeIndicator.svelte';
 	import RouteInfo from './RouteInfo.svelte';
 
 	type RouteTileCardProps = {
-		node: Node,
-	}
+		node: Node;
+	};
 
-	let { node = $bindable() }: RouteTileCardProps = $props()
+	let { node = $bindable() }: RouteTileCardProps = $props();
 
 	let lastSeen = $state(getTimeDifferenceMessage(getTime(node.lastSeen)));
 

@@ -5,11 +5,12 @@
 	import { toastError, toastSuccess } from '$lib/common/funcs';
 	import CardListPage from '$lib/cards/CardListPage.svelte';
 	import GroupListCard from '$lib/cards/acl/GroupListCard.svelte';
-	import RawMdiSave from '~icons/mdi/content-save-outline'
+	import RawMdiSave from '~icons/mdi/content-save-outline';
 
 	import NewItem from '$lib/parts/NewItem.svelte';
 
-	let {acl = $bindable(), loading = $bindable(false)}: {acl: ACLBuilder, loading?: boolean} = $props();
+	let { acl = $bindable(), loading = $bindable(false) }: { acl: ACLBuilder; loading?: boolean } =
+		$props();
 
 	const ToastStore = getToastStore();
 
@@ -18,7 +19,7 @@
 	let groupsFilterString = $state('');
 
 	const filteredGroups = $derived.by(() => {
-		const groups = acl.getGroupNames()
+		const groups = acl.getGroupNames();
 
 		try {
 			if (groupsFilterString === '') {
@@ -52,15 +53,25 @@
 	function toggleShowCreateGroup() {
 		showCreateGroup = !showCreateGroup;
 	}
-
 </script>
 
 <CardListPage>
 	<div class="mb-2">
 		<div class="flex flex-row space-x-2">
-			<button disabled={loading} class="btn-icon rounded-md variant-filled-success disabled:opacity-50 w-8 text-xl" onclick={() => { 
-				saveConfig(acl, ToastStore, {setLoadingTrue: () => { loading = true}, setLoadingFalse: ()=> { loading = false }})
-			}}>
+			<button
+				disabled={loading}
+				class="btn-icon rounded-md variant-filled-success disabled:opacity-50 w-8 text-xl"
+				onclick={() => {
+					saveConfig(acl, ToastStore, {
+						setLoadingTrue: () => {
+							loading = true;
+						},
+						setLoadingFalse: () => {
+							loading = false;
+						},
+					});
+				}}
+			>
 				<RawMdiSave />
 			</button>
 			<button class="btn-sm rounded-md variant-filled-success" onclick={toggleShowCreateGroup}>
@@ -68,12 +79,7 @@
 			</button>
 		</div>
 		{#if showCreateGroup}
-			<NewItem
-				title="Group"
-				disabled={loading}
-				bind:name={newGroupName}
-				submit={newGroup}
-			/>
+			<NewItem title="Group" disabled={loading} bind:name={newGroupName} submit={newGroup} />
 		{/if}
 	</div>
 
@@ -87,8 +93,8 @@
 		/>
 	</div>
 	<Accordion autocollapse={false}>
-	{#each filteredGroups as groupName}
-		<GroupListCard bind:acl groupName={groupName} open />
-	{/each}
+		{#each filteredGroups as groupName}
+			<GroupListCard bind:acl {groupName} open />
+		{/each}
 	</Accordion>
 </CardListPage>

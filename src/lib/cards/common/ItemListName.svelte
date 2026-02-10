@@ -13,14 +13,11 @@
 	import { App } from '$lib/States.svelte';
 
 	type ItemListNameProps = {
-		item: Named,
-		allowed?: boolean,
-	}
+		item: Named;
+		allowed?: boolean;
+	};
 
-	let {
-		item = $bindable(),
-		allowed = false,
-	}: ItemListNameProps = $props()
+	let { item = $bindable(), allowed = false }: ItemListNameProps = $props();
 
 	const prefix: ItemTypeName = getTypeName(item);
 
@@ -58,12 +55,12 @@
 								try {
 									switch (prefix) {
 										case 'user':
-											if(newName === ''){
-												toastError('User name must not be empty', ToastStore)
-												return
+											if (newName === '') {
+												toastError('User name must not be empty', ToastStore);
+												return;
 											}
 											if (isUser(item)) {
-												const oldName = item.name
+												const oldName = item.name;
 												const u = await renameUser(item, newName);
 												for (let i = 0; i < App.users.value.length; i++) {
 													if (App.users.value[i].id == u.id) {
@@ -79,9 +76,9 @@
 												}
 											}
 										case 'node':
-											if(newName === ''){
-												toastError('Node name must not be empty', ToastStore)
-												return
+											if (newName === '') {
+												toastError('Node name must not be empty', ToastStore);
+												return;
 											}
 											if (isNode(item)) {
 												const m = await renameNode(item, newName);
@@ -112,7 +109,9 @@
 							type="button"
 							class="btn-sm btn-icon-sm"
 							disabled={disableRename}
-							onclick={() => { showRename = false; }}
+							onclick={() => {
+								showRename = false;
+							}}
 						>
 							<RawMdiCloseCircleOutline />
 						</button>
@@ -127,15 +126,15 @@
 				<div>
 					{item.givenName ?? item.name}
 					{#if allowed}
-					<button
-						class="btn-sm btn-icon-sm"
-						onclick={() => {
-							newName = item.givenName ?? item.name;
-							showRename = true;
-						}}
-					>
-						<RawMdiRename />
-					</button>
+						<button
+							class="btn-sm btn-icon-sm"
+							onclick={() => {
+								newName = item.givenName ?? item.name;
+								showRename = true;
+							}}
+						>
+							<RawMdiRename />
+						</button>
 					{/if}
 				</div>
 			</div>

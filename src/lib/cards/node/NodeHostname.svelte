@@ -3,10 +3,9 @@
 	import type { Node } from '$lib/common/types';
 
 	type NodeHostnameProps = {
-		node: Node,
-	}
-	let { node }: NodeHostnameProps = $props()
-
+		node: Node;
+	};
+	let { node }: NodeHostnameProps = $props();
 </script>
 
 <CardListEntry title="Hostname:">

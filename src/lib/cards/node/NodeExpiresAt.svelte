@@ -8,11 +8,11 @@
 	import { App } from '$lib/States.svelte';
 
 	type NodeExpiresAtProps = {
-		node: Node,
-		loading?: boolean,
-	}
+		node: Node;
+		loading?: boolean;
+	};
 
-	let { node, loading = $bindable(false) }: NodeExpiresAtProps = $props()
+	let { node, loading = $bindable(false) }: NodeExpiresAtProps = $props();
 
 	let diff = $state(getTimeDifference(getTime(node.expiry)));
 
@@ -35,11 +35,11 @@
 		<span class="items-center">
 			<Delete
 				func={async () => {
-					loading = true
-					try{
-						App.updateValue(App.nodes, await expireNode(node))
+					loading = true;
+					try {
+						App.updateValue(App.nodes, await expireNode(node));
 					} finally {
-						loading = false
+						loading = false;
 					}
 				}}
 			/>

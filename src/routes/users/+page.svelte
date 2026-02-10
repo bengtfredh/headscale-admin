@@ -14,17 +14,23 @@
 	import FilterOnlineBtn from '$lib/parts/FilterOnlineBtn.svelte';
 
 	let showCreate = $state(false);
-	const layout = $derived(App.layoutUser.value)
+	const layout = $derived(App.layoutUser.value);
 
 	// Sort & Filter
 	let sortMethod = $state('id');
 	let sortDirection = $state<Direction>('up');
 	let filterOnlineStatus = $state<OnlineStatus>('all');
 	let filterString = $state('');
-	
+
 	const usersSortedFiltered = $derived(
-		getSortedFilteredUsers(App.users.value, filterString, sortMethod, sortDirection, filterOnlineStatus)
-	)
+		getSortedFilteredUsers(
+			App.users.value,
+			filterString,
+			sortMethod,
+			sortDirection,
+			filterOnlineStatus,
+		),
+	);
 
 	const Outer = $derived(layout == 'list' ? CardListPage : CardTilePage);
 	const Inner = $derived(layout == 'list' ? UserListCard : UserTileCard);

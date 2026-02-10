@@ -4,24 +4,24 @@
 	import { App } from '$lib/States.svelte';
 	import { getToastStore } from '@skeletonlabs/skeleton';
 	import RawMdiCheckCircleOutline from '~icons/mdi/check-circle-outline';
-	
+
 	type UserCreateProps = {
-		show: boolean,
-		loading?: boolean,
+		show: boolean;
+		loading?: boolean;
 	};
 
-	let { show = $bindable(), loading = $bindable(false)}: UserCreateProps = $props()
+	let { show = $bindable(), loading = $bindable(false) }: UserCreateProps = $props();
 
 	let username = $state('');
 	const toastStore = getToastStore();
 
 	async function newUser(event?: Event) {
-		event?.preventDefault()
+		event?.preventDefault();
 
 		loading = true;
 		try {
 			const u = await createUser(username);
-			App.users.value.push(u)
+			App.users.value.push(u);
 			toastSuccess('Created user "' + username + '"', toastStore);
 			show = false;
 			username = '';

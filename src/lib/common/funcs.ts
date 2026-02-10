@@ -7,7 +7,7 @@ import type { Direction, Node, OnlineStatus, User } from './types';
 import { App } from '$lib/States.svelte';
 
 export function clone<T>(item: T): T {
-	return JSON.parse(JSON.stringify(item)) as T
+	return JSON.parse(JSON.stringify(item)) as T;
 }
 
 export function focus(el: HTMLElement | null) {
@@ -17,26 +17,20 @@ export function focus(el: HTMLElement | null) {
 }
 
 export function arraysEqual<T>(a: T[], b: T[]): boolean {
-	if(a.length !== b.length){
-		return false
-	}
-
-	return JSON.stringify(a) == JSON.stringify(b)
-
-	if (a === b){
+	if (a === b) {
 		return true;
 	}
 
-	if (a == null || b == null){
+	if (a == null || b == null) {
 		return false;
 	}
-	
+
 	if (a.length !== b.length) {
 		return false;
 	}
 
-	for (var i = 0; i < a.length; ++i) {
-		if (a[i] !== b[i]){
+	for (let i = 0; i < a.length; ++i) {
+		if (a[i] !== b[i]) {
 			return false;
 		}
 	}
@@ -83,7 +77,7 @@ export function getTime(
 	fallback: string = DurationInfiniteString,
 ): number {
 	if (msg === null) {
-		return DurationInfinite.getTime()
+		return DurationInfinite.getTime();
 	}
 
 	if (msg === undefined) {
@@ -168,7 +162,7 @@ export function dateToStr(d: Date | string) {
 }
 
 export function toastSuccess(message: string, toastStore: ToastStore) {
-	message = DOMPurify.sanitize(message)
+	message = DOMPurify.sanitize(message);
 	toastStore.trigger({
 		message,
 		background: 'variant-filled-success',
@@ -176,7 +170,7 @@ export function toastSuccess(message: string, toastStore: ToastStore) {
 }
 
 export function toastWarning(message: string, toastStore: ToastStore) {
-	message = DOMPurify.sanitize(message)
+	message = DOMPurify.sanitize(message);
 	toastStore.trigger({
 		message,
 		background: 'variant-filled-warning',
@@ -184,7 +178,7 @@ export function toastWarning(message: string, toastStore: ToastStore) {
 }
 
 export function toastError(message: string, toastStore: ToastStore, error?: Error) {
-	message = DOMPurify.sanitize(message)
+	message = DOMPurify.sanitize(message);
 	if (error !== undefined) {
 		if (message.length > 0) {
 			message += ': ';
@@ -216,6 +210,33 @@ export function copyToClipboard(
 		});
 }
 
+export function getApiKeyPrefix(apiKey: string): string {
+	// New format: hskey-api-{prefix}-{secret}
+	const match = apiKey.match(/^hskey-api-([^-]+)/);
+	if (match) {
+		return match[1];
+	}
+	// Legacy format: prefix.secret
+	if (apiKey.indexOf('.') > -1) {
+		return apiKey.split('.').at(0) || '';
+	}
+	return apiKey;
+}
+
+export function isMaskedKey(key: string): boolean {
+	return key.endsWith('***');
+}
+
+export function getKeyDisplayLabel(key: string): string {
+	// New format: hskey-auth-{prefix}-*** or hskey-auth-{prefix}-{secret}
+	const match = key.match(/^hskey-auth-([^-]+)/);
+	if (match) {
+		return match[1];
+	}
+	// Legacy format: show first 8 chars
+	return key.substring(0, 8);
+}
+
 export function isValidTag(tag: string): boolean {
 	// the only restrictions I could find were to be all lowercase, no-spaces
 	// I made it alphanumeric with dashes and underscores only
@@ -243,11 +264,11 @@ export function getInverseMask6(prefix: number): number[] {
 
 export function isValidIP(addr: string): boolean {
 	try {
-		IPAddr.parse(addr)
-		return true
-	} catch(err) {
-		debug(err)
-		return false
+		IPAddr.parse(addr);
+		return true;
+	} catch (err) {
+		debug(err);
+		return false;
 	}
 }
 
@@ -295,18 +316,22 @@ function makeDrawerSettings(
 export function openDrawer(drawerStore: DrawerStore, id: string, meta: unknown) {
 	drawerStore.open(makeDrawerSettings(id, meta));
 }
-export function toOptions(values: string[]): {label: string, value:string}[] {
-	return values.map(v => ({
+export function toOptions(values: string[]): { label: string; value: string }[] {
+	return values.map((v) => ({
 		label: v,
 		value: v,
-	}))
+	}));
 }
 
 export function deduplicate<T>(arr: T[]): T[] {
-	return Array.from(new Set(arr))
+	return Array.from(new Set(arr));
 }
 
-export function getSortedUsers(users: User[], sortMethod: string, sortDirection: Direction): User[] {
+export function getSortedUsers(
+	users: User[],
+	sortMethod: string,
+	sortDirection: Direction,
+): User[] {
 	if (sortMethod === 'id') {
 		users = users.sort((a: User, b: User) => {
 			const aid = parseInt(a.id);
@@ -337,8 +362,11 @@ export function getSortedUsers(users: User[], sortMethod: string, sortDirection:
 	return users;
 }
 
-
-export function getSortedNodes(nodes: Node[], sortMethod: string, sortDirection: Direction): Node[] {
+export function getSortedNodes(
+	nodes: Node[],
+	sortMethod: string,
+	sortDirection: Direction,
+): Node[] {
 	if (sortMethod === 'id') {
 		nodes = nodes.sort((a: Node, b: Node) => {
 			const aid = parseInt(a.id);
@@ -368,11 +396,17 @@ export function getSortedNodes(nodes: Node[], sortMethod: string, sortDirection:
 	return nodes;
 }
 
-export function filterUser(user: User, filterString: string, onlineStatus: OnlineStatus = "all"): boolean {
+export function filterUser(
+	user: User,
+	filterString: string,
+	onlineStatus: OnlineStatus = 'all',
+): boolean {
 	try {
 		if (
-			(onlineStatus === 'online' && !App.nodes.value.filter((n) => n.user.id === user.id).some((n) => n.online)) ||
-			(onlineStatus === 'offline' && App.nodes.value.filter((n) => n.user.id === user.id).some((n) => n.online))
+			(onlineStatus === 'online' &&
+				!App.nodes.value.filter((n) => n.user?.id === user.id).some((n) => n.online)) ||
+			(onlineStatus === 'offline' &&
+				App.nodes.value.filter((n) => n.user?.id === user.id).some((n) => n.online))
 		) {
 			return false;
 		}
@@ -388,9 +422,13 @@ export function filterUser(user: User, filterString: string, onlineStatus: Onlin
 	}
 }
 
-export function filterNode(node: Node, filterString: string, onlineStatus: OnlineStatus = "all"): boolean {
-	if((onlineStatus === "online" && !node.online) || (onlineStatus === "offline" && node.online)){
-		return false
+export function filterNode(
+	node: Node,
+	filterString: string,
+	onlineStatus: OnlineStatus = 'all',
+): boolean {
+	if ((onlineStatus === 'online' && !node.online) || (onlineStatus === 'offline' && node.online)) {
+		return false;
 	}
 
 	if (filterString === '') {
@@ -401,15 +439,14 @@ export function filterNode(node: Node, filterString: string, onlineStatus: Onlin
 		const r = RegExp(filterString);
 		const getTag = (tag: string) => {
 			if (tag.startsWith('tag:')) {
-				return tag.substring(0, 4);
+				return tag.substring(4);
 			}
 			return tag;
 		};
 		return (
 			r.test(node.name) ||
 			r.test(node.givenName) ||
-			node.forcedTags.map(getTag).some((tag) => r.test(tag)) ||
-			node.validTags.map(getTag).some((tag) => r.test(tag))
+			node.tags.map(getTag).some((tag) => r.test(tag))
 		);
 	} catch (err) {
 		return true;
@@ -418,35 +455,35 @@ export function filterNode(node: Node, filterString: string, onlineStatus: Onlin
 
 export function getSortedFilteredUsers(
 	users: User[],
-	filterString:string,
+	filterString: string,
 	sortMethod: string,
 	sortDirection: Direction,
 	onlineStatus: OnlineStatus,
-){
+) {
 	return getSortedUsers(
-		users.filter((user)=> filterUser(user, filterString, onlineStatus)),
+		users.filter((user) => filterUser(user, filterString, onlineStatus)),
 		sortMethod,
 		sortDirection,
-	)
+	);
 }
 
 export function getSortedFilteredNodes(
 	nodes: Node[],
-	filterString:string,
+	filterString: string,
 	sortMethod: string,
 	sortDirection: Direction,
 	onlineStatus: OnlineStatus,
 	ignoreRouteless: boolean = false,
-){
+) {
 	let nodesSortedFiltered = getSortedNodes(
-		nodes.filter((node)=> filterNode(node, filterString, onlineStatus)),
+		nodes.filter((node) => filterNode(node, filterString, onlineStatus)),
 		sortMethod,
 		sortDirection,
-	)
-	if(ignoreRouteless === true){
+	);
+	if (ignoreRouteless === true) {
 		return nodesSortedFiltered.filter((n) => {
 			return n.availableRoutes.length > 0;
-		})
+		});
 	}
-	return nodesSortedFiltered
+	return nodesSortedFiltered;
 }

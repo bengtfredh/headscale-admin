@@ -3,10 +3,10 @@
 	import type { Node } from '$lib/common/types';
 
 	type NodeRegistrationMethodProps = {
-		node: Node,
-	}
+		node: Node;
+	};
 
-	let { node }: NodeRegistrationMethodProps = $props()
+	let { node }: NodeRegistrationMethodProps = $props();
 	const nodeRegMethod = $derived.by(() => {
 		switch (node.registerMethod) {
 			case 'REGISTER_METHOD_AUTH_KEY':
@@ -14,9 +14,9 @@
 			case 'REGISTER_METHOD_CLI':
 				return 'CLI';
 			case 'REGISTER_METHOD_OIDC':
-				return "OIDC";
+				return 'OIDC';
 			default:
-				return "Unspecified"
+				return 'Unspecified';
 		}
 	});
 </script>

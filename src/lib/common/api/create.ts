@@ -16,13 +16,13 @@ export async function createApiKey() {
 	date.setDate(date.getDate() + 90);
 	const data = { expiration: date.toISOString() };
 	const { apiKey } = await apiPost<ApiApiKey>(API_URL_APIKEY, data);
-	debug('Created API Key "...' + apiKey.slice(-10) + '"')
+	debug('Created API Key "...' + apiKey.slice(-10) + '"');
 	return apiKey;
 }
 
 export async function createUser(username: string): Promise<User> {
 	if (username.length === 0) {
-		throw new Error("Username cannot be empty")
+		throw new Error('Username cannot be empty');
 	}
 	const data = { name: username };
 	const { user } = await apiPost<ApiUser>(API_URL_USER, data);
@@ -32,7 +32,7 @@ export async function createUser(username: string): Promise<User> {
 
 export async function createNode(key: string, username: string): Promise<Node> {
 	const data = '?user=' + username + '&key=' + key;
-	const { node } = await apiPost<ApiNode>(API_URL_NODE + '/register' + data)
+	const { node } = await apiPost<ApiNode>(API_URL_NODE + '/register' + data);
 	debug('Created Node "' + node.givenName + '" for user "' + username + '"');
 	return node;
 }
@@ -42,13 +42,17 @@ export async function createPreAuthKey(
 	ephemeral: boolean,
 	reusable: boolean,
 	expiration: Date | string,
+	aclTags: string[] = [],
 ) {
-	const data = {
+	const data: Record<string, unknown> = {
 		user: user.id,
 		reusable,
 		ephemeral,
 		expiration: new Date(expiration).toISOString(),
 	};
+	if (aclTags.length > 0) {
+		data.aclTags = aclTags.map((t) => (t.startsWith('tag:') ? t : 'tag:' + t));
+	}
 	const { preAuthKey } = await apiPost<ApiPreAuthKey>(API_URL_PREAUTHKEY, data);
 	debug('Created PreAuthKey for user "' + user.name + '"');
 	return preAuthKey;

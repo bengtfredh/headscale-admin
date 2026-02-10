@@ -23,8 +23,14 @@
 	const Inner = $derived(App.layoutNode.value === 'list' ? NodeListCard : NodeTileCard);
 
 	const nodesSortedFiltered = $derived(
-		getSortedFilteredNodes(App.nodes.value, filterString, sortMethod, sortDirection, filterOnlineStatus)
-	)
+		getSortedFilteredNodes(
+			App.nodes.value,
+			filterString,
+			sortMethod,
+			sortDirection,
+			filterOnlineStatus,
+		),
+	);
 
 	function toggle(method: string) {
 		if (method != sortMethod) {

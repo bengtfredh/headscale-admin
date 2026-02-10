@@ -1,7 +1,7 @@
 ARG ENDPOINT=/admin
 ARG PORT=80
 
-FROM node:20-alpine AS build
+FROM node:24-alpine AS build
 ARG ENDPOINT
 ENV ENDPOINT=$ENDPOINT
 
@@ -29,8 +29,8 @@ COPY vite.config.ts ./
 COPY static/ ./static/
 COPY src/ ./src/
 
-# Build static application, endpoint is provided by $ENDPOINT
-RUN npm run build 
+# Sync SvelteKit generated files and build static application
+RUN npx svelte-kit sync && npm run build
 
 FROM caddy:latest
 
